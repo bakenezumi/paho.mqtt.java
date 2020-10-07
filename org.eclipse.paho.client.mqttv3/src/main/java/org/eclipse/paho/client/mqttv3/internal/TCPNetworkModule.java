@@ -18,10 +18,7 @@ package org.eclipse.paho.client.mqttv3.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.ConnectException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
+import java.net.*;
 
 import javax.net.SocketFactory;
 
@@ -69,7 +66,9 @@ public class TCPNetworkModule implements NetworkModule {
 		try {
 			// @TRACE 252=connect to host {0} port {1} timeout {2}
 			log.fine(CLASS_NAME,methodName, "252", new Object[] {host, Integer.valueOf(port), Long.valueOf(conTimeout*1000)});
-			SocketAddress sockaddr = new InetSocketAddress(host, port);
+//			SocketAddress sockaddr = new InetSocketAddress(host, port);
+			InetAddress v4Address = getV4InetAddressByName(host);
+			SocketAddress sockaddr = new InetSocketAddress(v4Address, port);
 			socket = factory.createSocket();
 			socket.connect(sockaddr, conTimeout*1000);
 			socket.setSoTimeout(1000);
@@ -109,5 +108,14 @@ public class TCPNetworkModule implements NetworkModule {
 
 	public String getServerURI() {
 		return "tcp://" + host + ":" + port;
+	}
+
+	private static InetAddress getV4InetAddressByName(String host) throws UnknownHostException {
+		for (InetAddress addr : InetAddress.getAllByName(host)) {
+			if(addr instanceof Inet4Address) {
+				return addr;
+			}
+		}
+		throw new UnknownHostException();
 	}
 }
